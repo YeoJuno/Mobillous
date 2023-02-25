@@ -42,7 +42,7 @@ void loop() {
 
       
     int left_speed = max_speed - 2* output;
-    int right_speed = max_speed + 10 *output  ;
+    int right_speed = max_speed + 10 *output;
 
       
     if (left_speed > max_speed) left_speed = max_speed;
