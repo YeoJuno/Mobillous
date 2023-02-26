@@ -1,43 +1,6 @@
-#define _BIT_(x)                    ( 1 << (x) )
-#define _BIT_RESET_(x)              ( (x) = 0x00 )
-#define _BITS_EQUAL_(x, bits)       ( (x) = bits )
-#define _BIT_SET_(x, pos)           ( (x) |= (_BIT_(pos)) )
-#define _BIT_TOGGLE_(x, pos)        ( (x) ^= (_BIT_(pos)) )
-#define _BIT_UNSET_(x, pos)         ( (x) &= (~(_BIT_(pos))) )
-#define _BIT_CHECK_(x, pos)         ( ((x) >> (pos)) & 0x01 )
-#define _BITS_SET_(x, bits)         ( (x) |= (bits) )
-#define _BITS_TOGGLE_(x, bits)      ( (x) ^= (bits) )
-#define _BITS_UNSET_(x, bits)       ( (x) &= (~(bits)) )
-#define _BIT_WRITE_(x, pos, data)   ( (data) ? ((_BIT_SET_((x), (pos)))) : ((_BIT_UNSET_((x), (pos)))) )
-
-inline void directSetPinOut(uint8_t pin) {
-    _BIT_SET_(*(unoPin[pin].addrDdr), unoPin[pin].pinNumInPort);
-}
-inline void directSetPinIn(uint8_t pin) {
-    _BIT_UNSET_(*(unoPin[pin].addrDdr), unoPin[pin].pinNumInPort);
-    _BIT_UNSET_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
-}
-inline uint8_t directDigitalRead(uint8_t pin) {
-    return _BIT_CHECK_(*(unoPin[pin].addrPin), unoPin[pin].pinNumInPort);
-}
-inline void directDigitalWrite(uint8_t pin, uint8_t data) {
-    _BIT_WRITE_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort, data);
-}
-inline void directDigitalToggle(uint8_t pin) {
-    _BIT_TOGGLE_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
-}
-
-class FrequencyTimer2 {
-private:
-    static uint8_t enabled = false;
-public:
-    static void enable();
-    static void disable();
-    static void setPeriod(unsigned long);
-    static unsigned long getPeriod();
-    static void (* onOverflow)() = 0;
-    static void setOnOverflow(void (*)());
-};
+#include "Arduino.h"
+#include "mobis_io.h"
+#include "mobis_timer.h"
 
 void FrequencyTimer2::enable() {
     /* TCCR2A: Timer/Counter Control Register A
@@ -48,17 +11,8 @@ void FrequencyTimer2::enable() {
 void FrequencyTimer2::disable() {
     /* TCCR2A: Timer/Counter Control Register A
     Set TCCR2A[6](COM2A0) bit to clear/disable OC2A */
-    FrequencyTimer2::enable = false;
+    FrequencyTimer2::enabled = false;
     _BIT_UNSET_(*(volatile uint8_t *)(0xB0), 6);    // TCCR2A &= _BV(COM2A0);
-}
-
-ISR(TIMER2_COMPA_vect) {
-    static uint8_t intHandler = 0;
-    if ( !intHandler && FrequencyTimer2::onOverflow ) {
-        intHandler = 1;
-        (*FrequencyTimer2::onOverflow)();
-        intHandler = 0;
-    }
 }
 
 void FrequencyTimer2::setOnOverflow(void (*func)(void)) {
@@ -74,6 +28,7 @@ void FrequencyTimer2::setPeriod(unsigned long period) {
     if (period == 0) period = 1;
     // we work with half-cycles before the toggle (?)
     period *= (clockCyclesPerMicrosecond() / 2);
+	
     if (period <= 256L)                 pre = 1, top = period - 1;
     else if (period <= (256L << 3))     pre = 2, top = (period >> 3) - 1;
     else if (period <= (256L << 5))     pre = 3, top = (period >> 5) - 1;
@@ -81,7 +36,8 @@ void FrequencyTimer2::setPeriod(unsigned long period) {
     else if (period <= (256L << 7))     pre = 5, top = (period >> 7) - 1;
     else if (period <= (256L << 8))     pre = 6, top = (period >> 8) - 1;
     else if (period <= (256L << 10))    pre = 7, top = (period >> 10) - 1;
-    else                                pre = 7, top = 255;
+    else  pre = 7, top = 255;
+	
     _BIT_RESET_(*(volatile uint8_t *)(0xB1));       // TCCR2B = 0;
     _BIT_RESET_(*(volatile uint8_t *)(0xB0));       // TCCR2A = 0;
     _BIT_RESET_(*(volatile uint8_t *)(0xB2));       // TCNT2 = 0;
@@ -101,7 +57,7 @@ unsigned long FrequencyTimer2::getPeriod() {
     uint8_t top = (*(volatile uint8_t *)(0xB3));
 
     uint8_t shift;
-    swtich(clock_source) {
+    switch(clock_source) {
     case 0x00: shift = 0;  break;  // No prescailing
     case 0x01: shift = 0;  break;  // No prescailing
     case 0x02: shift = 3;  break;  // T2A source divided by 8 from prescaler
@@ -115,4 +71,11 @@ unsigned long FrequencyTimer2::getPeriod() {
     return (((unsigned long)(top + 1) << (shift + 1)) + 1) / clockCyclesPerMicrosecond();
 }
 
-
+/* ISR(TIMER2_COMPA_vect) {
+    static uint8_t intHandler = 0;
+    if ( !intHandler && FrequencyTimer2::onOverflow ) {
+        intHandler = 1;
+        (*FrequencyTimer2::onOverflow)();
+        intHandler = 0;
+    }
+} */
