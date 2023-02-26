@@ -1,3 +1,4 @@
+#include <SoftwareSerial.h>
 typedef struct UnoPin {
     volatile uint8_t* addrPort;    // Address of PORTx.
     volatile uint8_t* addrDdr;     // Address of DDRx.
@@ -6,16 +7,23 @@ typedef struct UnoPin {
 } UnoPin;
 
 static const UnoPin unoPin[] = {
-    /* ------ Port D (Digital 0 ~ 7) ------- */
-    {0x2B, 0x2A, 0x29, 0}, {0x2B, 0x2A, 0x29, 1}, {0x2B, 0x2A, 0x29, 2},
-    {0x2B, 0x2A, 0x29, 3}, {0x2B, 0x2A, 0x29, 4}, {0x2B, 0x2A, 0x29, 5},
-    {0x2B, 0x2A, 0x29, 6}, {0x2B, 0x2A, 0x29, 7},
-    /* ------ Port B (Digital 8 ~ 13) ------- */
-    {0x25, 0x24, 0x23, 0}, {0x25, 0x24, 0x23, 1}, {0x25, 0x24, 0x23, 2},
-    {0x25, 0x24, 0x23, 3}, {0x25, 0x24, 0x23, 4}, {0x25, 0x24, 0x23, 5},
-    /* ------ Port C (Analog 0 ~ 5) ------- */
-    {0x28, 0x27, 0x26, 0}, {0x28, 0x27, 0x26, 1}, {0x28, 0x27, 0x26, 2},
-    {0x28, 0x27, 0x26, 3}, {0x28, 0x27, 0x26, 4}, {0x28, 0x27, 0x26, 5}
+    // /* ------ Port D (Digital 0 ~ 7) ------- */
+    // {0x2B, 0x2A, 0x29, 0}, {0x2B, 0x2A, 0x29, 1}, {0x2B, 0x2A, 0x29, 2},
+    // {0x2B, 0x2A, 0x29, 3}, {0x2B, 0x2A, 0x29, 4}, {0x2B, 0x2A, 0x29, 5},
+    // {0x2B, 0x2A, 0x29, 6}, {0x2B, 0x2A, 0x29, 7},
+    // /* ------ Port B (Digital 8 ~ 13) ------- */
+    // {0x25, 0x24, 0x23, 0}, {0x25, 0x24, 0x23, 1}, {0x25, 0x24, 0x23, 2},
+    // {0x25, 0x24, 0x23, 3}, {0x25, 0x24, 0x23, 4}, {0x25, 0x24, 0x23, 5},
+    // /* ------ Port C (Analog 0 ~ 5) ------- */
+    // {0x28, 0x27, 0x26, 0}, {0x28, 0x27, 0x26, 1}, {0x28, 0x27, 0x26, 2},
+    // {0x28, 0x27, 0x26, 3}, {0x28, 0x27, 0x26, 4}, {0x28, 0x27, 0x26, 5}
+    {&PORTD, &DDRD, &PIND, 0}, {&PORTD, &DDRD, &PIND, 1}, {&PORTD, &DDRD, &PIND, 2},
+    {&PORTD, &DDRD, &PIND, 3}, {&PORTD, &DDRD, &PIND, 4}, {&PORTD, &DDRD, &PIND, 5},
+    {&PORTD, &DDRD, &PIND, 6}, {&PORTD, &DDRD, &PIND, 7},
+    {&PORTB, &DDRB, &PINB, 0}, {&PORTB, &DDRB, &PINB, 1}, {&PORTB, &DDRB, &PINB, 2},
+    {&PORTB, &DDRB, &PINB, 3}, {&PORTB, &DDRB, &PINB, 4}, {&PORTB, &DDRB, &PINB, 5},
+    {&PORTC, &DDRC, &PINC, 0}, {&PORTC, &DDRC, &PINC, 1}, {&PORTC, &DDRC, &PINC, 2},
+    {&PORTC, &DDRC, &PINC, 3}, {&PORTC, &DDRC, &PINC, 4}, {&PORTC, &DDRC, &PINC, 5}
 };
 
 inline void directSetPinOut(uint8_t pin) {
@@ -98,15 +106,9 @@ TCCR0B - Timer/Counter Control Register B for Timer0
 #define PWM4_PIN        5
 
 static uint8_t latchData;
-static uint8_t microCurve[] = {
-      0, 25,  50,  74,  98,  120, 141, 162, 180,
-    197, 212, 225, 236, 244, 250, 253, 255
-};
 
 class MotorController {
-protected:
-	uint8_t timerInitialized;
-	MotorController();
+public:
 	void enableMotor();
 	void xferDataToShifter();
 };
@@ -127,15 +129,11 @@ public:
     void setPWM2(uint8_t timerLimitValue) { (*(volatile uint8_t *)(0xB4)) = timerLimitValue; }
     // Use PWM from timer0A on PD6 (Arduino Uno pin 6)
     void initPWM3(uint8_t frequency);
-    void setPWM3(uint8_t timerLimitValue) { (*(volatile uint8_t *)(0x27)) = timerLimitValue; }
+    void setPWM3(uint8_t timerLimitValue) { (*(volatile uint8_t *)(0x47)) = timerLimitValue; }
     // Use PWM from timer0B on PD5 (Arduino Uno pin 5)
     void initPWM4(uint8_t frequency);
-    void setPWM4(uint8_t timerLimitValue) { (*(volatile uint8_t *)(0xB3)) = timerLimitValue; }
+    void setPWM4(uint8_t timerLimitValue) { (*(volatile uint8_t *)(0x48)) = timerLimitValue; }
 };
-
-MotorController::MotorController() {
-	TimerInitalized = false;
-}
 
 void MotorController::enableMotor() {
 	latchData = 0;
@@ -164,76 +162,78 @@ void MotorController::xferDataToShifter() {
 	digitalWrite(MOTOR_LATCH, HIGH);
 }
 
-Motor::Motor(uint8_t channel, uint8_t frequency) {
+static MotorController MC;
+
+Motor::Motor(uint8_t channel, uint8_t frequency = MOTOR34_64KHZ) {
     this->motorNum = channel;
     this->motorFreq = frequency;
-    
-    enableMotor();
+
+    MC.enableMotor();
 
     switch (channel) {
     case 1:
         /* For motor wired with channel 1 */
         latchData &= ~(bit(MOTOR1_A) | bit(MOTOR1_B));
-        resetMotor();
+        MC.xferDataToShifter();
         initPWM1(frequency);
         break;
     case 2:
         /* For motor wired with channel 2 */
         latchData &= ~(bit(MOTOR2_A) | bit(MOTOR2_B));
-        resetMotor();
+        MC.xferDataToShifter();
         initPWM2(frequency);
         break;
     case 3:
         /* For motor wired with channel 3 */
         latchData &= ~(bit(MOTOR3_A) | bit(MOTOR3_B));
-        resetMotor();
+        MC.xferDataToShifter();
         initPWM3(frequency);
         break;
     case 4:
         /* For motor wired with channel 4 */
         latchData &= ~(bit(MOTOR4_A) | bit(MOTOR4_B));
-        resetMotor();
+        MC.xferDataToShifter();
         initPWM4(frequency);
         break;
     }
 }
 
 // Initialize PWM setting for Timer2A
-Motor::initPWM1(uint8_t frequency) {
+void Motor::initPWM1(uint8_t frequency) {
     // Config TCCR2A : Fast PWM mode + Clear OC2A on compare match + Count from bottom
-    (*(volatile uint8_t *)(0xB0)) |= (bit(7) | bit(1) | bit(0))
+    (*(volatile uint8_t *)(0xB0)) |= (bit(7) | bit(1) | bit(0));
     // Config TCCR2B : No clock prescale at all, 1:1 (Because of CS22, CS21, CS20 = 0b001)
-    (*(volatile uint8_t *)(0xB1)) |= (this->motorFreq & 0x7)
+    (*(volatile uint8_t *)(0xB1)) |= (this->motorFreq & 0x7);
     // Clear OCR2A(0xB3) to 0
     (*(volatile uint8_t *)(0xB3)) = 0;
     directSetPinOut(PWM1_PIN);
 }
 // Initialize PWM setting for Timer2B
-Motor::initPWM2(uint8_t frequency) {
+void Motor::initPWM2(uint8_t frequency) {
     // Config TCCR2A(0xB0) : Fast PWM mode + Clear OC2B on compare match + Count from bottom
-    (*(volatile uint8_t *)(0xB0)) |= (bit(5) | bit(1) | bit(0))
+    (*(volatile uint8_t *)(0xB0)) |= (bit(5) | bit(1) | bit(0));
     // Config TCCR2B(0xB1) : No clock prescale at all, 1:1 (Because of CS22, CS21, CS20 = 0b001)
-    (*(volatile uint8_t *)(0xB1)) |= (this->motorFreq & 0x7)
+    (*(volatile uint8_t *)(0xB1)) |= (this->motorFreq & 0x7);
     // Clear OCR2B(0xB4) to 0
     (*(volatile uint8_t *)(0xB4)) = 0;
     directSetPinOut(PWM2_PIN);
 }
 // Initialize PWM setting for Timer0A
-Motor::initPWM3(uint8_t frequency) {
+void Motor::initPWM3(uint8_t frequency) {
     // Config TCCR0A(0x44) : Fast PWM mode + Clear OC0A on compare match + Count from bottom
-    (*(volatile uint8_t *)(0x44)) |= (bit(7) | bit(1) | bit(0))
+    (*(volatile uint8_t *)(0x44)) |= (bit(7) | bit(1) | bit(0));
     // Config TCCR0B(0x45) : No clock prescale at all, 1:1 (Because of CS02, CS01, CS00 = 0b001)
-    (*(volatile uint8_t *)(0x45)) |= (this->motorFreq & 0x7)
-    // Clear OCR0A(0x47) to 0
+    // (*(volatile uint8_t *)(0x45)) |= (this->motorFreq & 0x7);
+    // // Clear OCR0A(0x47) to 0
     (*(volatile uint8_t *)(0x47)) = 0;
     directSetPinOut(PWM3_PIN);
 }
 // Initialize PWM setting for Timer0B
-Motor::initPWM4(uint8_t frequency) {
+void Motor::initPWM4(uint8_t frequency) {
     // Config TCCR0A(0x44) : Fast PWM mode + Clear OC0B on compare match + Count from bottom
-    (*(volatile uint8_t *)(0x44)) |= (bit(5) | bit(1) | bit(0))
-    // Config TCCR0B(0x45) : No clock prescale at all, 1:1 (Because of CS02, CS01, CS00 = 0b001)
-    (*(volatile uint8_t *)(0x45)) |= (this->motorFreq & 0x7)
+    (*(volatile uint8_t *)(0x44)) |= (bit(5) | bit(1) | bit(0));
+    // // Config TCCR0B(0x45) : No clock prescale at all, 1:1 (Because of CS02, CS01, CS00 = 0b001)
+    // (*(volatile uint8_t *)(0x45)) |= (this->motorFreq & 0x7);
     // Clear OCR0B(0x48) to 0
     (*(volatile uint8_t *)(0x48)) = 0;
     directSetPinOut(PWM4_PIN);
@@ -253,15 +253,15 @@ void Motor::run(uint8_t command) {
         bitClear(latchData, rightMotor);
         break;
     case BACKWARD:
-        bitSet(latchData, leftMotor);
-        bitClear(latchData, rightMotor);
+        bitClear(latchData, leftMotor);
+        bitSet(latchData, rightMotor);
         break;
     case RELEASE:
-        bitSet(latchData, leftMotor);
+        bitClear(latchData, leftMotor);
         bitClear(latchData, rightMotor);
         break;        
     }
-    xferDataToShifter();
+    MC.xferDataToShifter();
 }
 
 void Motor::setSpeed(uint8_t speed) {
@@ -273,9 +273,22 @@ void Motor::setSpeed(uint8_t speed) {
     }
 }
 
-void setup() {
+//Motor motor_L(3), motor_R(4);
 
-} 
- 
+void setup() {
+    // Serial.begin(115200);              
+    // Serial.println("Eduino Smart Car Start!");
+    // motor_L.setSpeed(200);
+    // motor_R.setSpeed(200);
+    // motor_L.run(RELEASE);
+    // motor_R.run(RELEASE);
+    directSetPinOut(13);
+}
 void loop() {
+    // motor_L.run(FORWARD);
+    // motor_R.run(FORWARD);
+    directDigitalWrite(13, 1);
+    delay(1000);
+    directDigitalWrite(13, 0);
+    delay(1000);
 }
