@@ -10,6 +10,10 @@ void directSetPinIn(uint8_t pin) {
     _BIT_UNSET_(*(unoPin[pin].addrDdr), unoPin[pin].pinNumInPort);
     _BIT_UNSET_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
 }
+void directSetPinInPullup(uint8_t pin) {
+	_BIT_UNSET_(*(unoPin[pin].addrDdr), unoPin[pin].pinNumInPort);
+	_BIT_SET_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
+}
 /* Substitute of 'digitalRead()'. Modify PINx register. */
 uint8_t directDigitalRead(uint8_t pin) {
     return _BIT_CHECK_(*(unoPin[pin].addrPin), unoPin[pin].pinNumInPort);

@@ -50,6 +50,8 @@ static const UnoPin unoPin[] = {
 void directSetPinOut(uint8_t pin);
 /* Substitute of 'pinMode(, INPUT)'. Modify DDRx, PINx register. */
 void directSetPinIn(uint8_t pin);
+/* Substitute of 'pinMode(, INPUT_PULLUP)'. Modify DDRx, PINx register. */
+void directSetPinInPullup(uint8_t pin);
 /* Substitute of 'digitalRead()'. Modify PINx register. */
 uint8_t directDigitalRead(uint8_t pin);
 /* Substitute of 'digitalWrite()'. Modify PORTx register. */
