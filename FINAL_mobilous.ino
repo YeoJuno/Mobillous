@@ -164,6 +164,8 @@ void loop() {
     else {
         motor_L.run(RELEASE);
         motor_R.run(RELEASE);
+        now_motorL_speed = 0;
+        now_motorR_speed = 0
         lcd.clear();
         lcd.noBacklight();
     }
@@ -218,6 +220,8 @@ void obstacle_detected() {
     Serial.println("IRState1 In!");
     motor_L.run(RELEASE);
     motor_R.run(RELEASE);
+    now_motorL_speed = 0;
+    now_motorR_speed = 0
     time_current = millis();
     if(time_current - time_previous > 500) {
         time_previous = time_current;
@@ -244,6 +248,8 @@ void IRstate3 () {
     } else if (time_diff <= 700) {    // 500ms 정지
         motor_L.run(RELEASE);
         motor_R.run(RELEASE);
+        now_motorL_speed = 0;
+        now_motorR_speed = 0;
     } else if (time_diff <= 1300)  {  // 500ms 전진
         motor_L.run(FORWARD);
         motor_R.run(FORWARD);
@@ -257,6 +263,8 @@ void IRstate3 () {
     } else if(time_diff <= 1800) {     // 500ms 정지
         motor_L.run(RELEASE);
         motor_R.run(RELEASE);
+        now_motorL_speed = 0;
+        now_motorR_speed = 0;
     } else {      // 다음 상태 진입
         obstacle_flag = 5;
     }
@@ -268,6 +276,8 @@ void IRstate4 () {
     if (time_diff <= 500) {
         motor_L.run(RELEASE);
         motor_R.run(RELEASE);
+        now_motorL_speed = 0;
+        now_motorR_speed = 0;
     } else if (time_diff <= 800) {
         motor_L.setSpeed(180);
         motor_R.setSpeed(180);
