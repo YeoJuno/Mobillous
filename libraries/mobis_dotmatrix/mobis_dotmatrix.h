@@ -17,27 +17,25 @@
 #define OP_SHUTDOWN         0x0C
 #define OP_DISPLAYTEST      0x0F
 
-class LedControl {
+class mobis_dot {
 	uint8_t pin_CS;			// active low
 	uint8_t pin_CLK;
 	uint8_t pin_MOSI;
-	uint8_t deviceNum;
 	uint8_t status[64];
 	uint8_t spidata[16];
-	void spiXfer(uint8_t addr, volatile uint8_t opcode, volatile uint8_t data);
+	void xfer(uint8_t addr, volatile uint8_t opcode, volatile uint8_t data);
 
 public:
-	LedControl(uint8_t dataPin, uint8_t clkPin, uint8_t csPin, uint8_t numDevices = 1);
+    mobis_dot(uint8_t dataPin, uint8_t clkPin, uint8_t csPin);
 	void clearDisplay(uint8_t addr);
 	void setLed(uint8_t addr, uint8_t row, uint8_t col, uint8_t state);
 	void setRow(uint8_t addr, uint8_t row, uint8_t value);
 	void setColumn(uint8_t addr, uint8_t col, uint8_t value);
     }
-	void setIntensity(uint8_t addr, uint8_t intensity) { spiXfer(addr, OP_INTENSITY, intensity); }
-	void setScanLimit(uint8_t addr, uint8_t limit) { spiXfer(addr, OP_INTENSITY, limit); }
+	void setIntensity(uint8_t addr, uint8_t intensity) { xfer(addr, OP_INTENSITY, intensity); }
+	void setScanLimit(uint8_t addr, uint8_t limit) { xfer(addr, OP_INTENSITY, limit); }
 	void shutdown(uint8_t addr, uint8_t status) {
         if (status) spiXfer(addr, OP_SHUTDOWN, LOW);
-        else spiXfer(addr, OP_SHUTDOWN, HIGH);
+        else xfer(addr, OP_SHUTDOWN, HIGH);
 };
-
 #endif

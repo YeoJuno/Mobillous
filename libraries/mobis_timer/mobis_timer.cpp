@@ -2,20 +2,20 @@
 #include "mobis_io.h"
 #include "mobis_timer.h"
 
-void FrequencyTimer2::enable() {
+void mobis_timer::enable() {
     /* TCCR2A: Timer/Counter Control Register A
     Set TCCR2A[6](COM2A0) bit to set/toggle OC2A on compare match */
     FrequencyTimer2::enabled = true;
     _BIT_SET_(*(volatile uint8_t *)(0xB0), 6);      // TCCR2A |= _BV(COM2A0);
 }
-void FrequencyTimer2::disable() {
+void mobis_timer::disable() {
     /* TCCR2A: Timer/Counter Control Register A
     Set TCCR2A[6](COM2A0) bit to clear/disable OC2A */
     FrequencyTimer2::enabled = false;
     _BIT_UNSET_(*(volatile uint8_t *)(0xB0), 6);    // TCCR2A &= _BV(COM2A0);
 }
 
-void FrequencyTimer2::setOnOverflow(void (*func)(void)) {
+void mobis_timer::setOnOverflow(void (*func)(void)) {
     FrequencyTimer2::onOverflow = func;
     /* TIMSK2(0x70): Timer/Counter2 Interrupt Mask Register
     Set 'Timer2A Interrupt Enable' bit. */
@@ -23,7 +23,7 @@ void FrequencyTimer2::setOnOverflow(void (*func)(void)) {
     else _BIT_UNSET_(*(volatile uint8_t *)(0x70), 1);
 }
 
-void FrequencyTimer2::setPeriod(unsigned long period) {
+void mobis_timer::setPeriod(unsigned long period) {
     uint8_t pre, top;
     if (period == 0) period = 1;
     // we work with half-cycles before the toggle (?)
@@ -49,7 +49,7 @@ void FrequencyTimer2::setPeriod(unsigned long period) {
     // TCCR2A = (_BV(WGM21) | (FrequencyTimer2::enabled ? _BV(COM2A0) : 0));
 }
 
-unsigned long FrequencyTimer2::getPeriod() {
+unsigned long mobis_timer::getPeriod() {
     /* TCCR2B(0xB1): Timer/Counter Control Register B
     [2:0]; CS22, CS21, CS20 bits; Clock source select bits */
     uint8_t clock_source = ((*(volatile uint8_t *)(0xB1)) & 0x07);
@@ -71,11 +71,15 @@ unsigned long FrequencyTimer2::getPeriod() {
     return (((unsigned long)(top + 1) << (shift + 1)) + 1) / clockCyclesPerMicrosecond();
 }
 
-/* ISR(TIMER2_COMPA_vect) {
+ISR(TIMER2_COMPA_vect) {
     static uint8_t intHandler = 0;
-    if ( !intHandler && FrequencyTimer2::onOverflow ) {
+    if ( !intHandler && mobis_timer::onOverflow ) {
         intHandler = 1;
-        (*FrequencyTimer2::onOverflow)();
+        (*mobis_timer::onOverflow)();
         intHandler = 0;
     }
-} */
+}
+
+unsigned long mobis_timer::mobis_millis(void) {
+    return this->value;
+}
