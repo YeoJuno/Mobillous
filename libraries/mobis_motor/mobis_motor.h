@@ -64,12 +64,12 @@ public:
 	void xferDataToShifter();
 };
 class Motor : public MotorController{
+public:
 	uint8_t motorNum;
 	uint8_t motorFreq;
 	uint8_t motorSpeed;
-public:
 	// 30Hz <= Arduino PWM frequency <= 65Khz
-	Motor(uint8_t channel, uint8_t frequency = MOTOR34_64KHZ);
+	Motor(uint8_t channel, uint8_t frequency = MOTOR34_8KHZ);
 	void run(uint8_t command);
 	void setSpeed(uint8_t speed);
     // Use PWM from timer2A on PB3 (Arduino Uno pin 11)

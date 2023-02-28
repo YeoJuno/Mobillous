@@ -32,16 +32,12 @@ public:
 	void setLed(uint8_t addr, uint8_t row, uint8_t col, uint8_t state);
 	void setRow(uint8_t addr, uint8_t row, uint8_t value);
 	void setColumn(uint8_t addr, uint8_t col, uint8_t value);
+    }
+	void setIntensity(uint8_t addr, uint8_t intensity) { spiXfer(addr, OP_INTENSITY, intensity); }
+	void setScanLimit(uint8_t addr, uint8_t limit) { spiXfer(addr, OP_INTENSITY, limit); }
 	void shutdown(uint8_t addr, uint8_t status) {
         if (status) spiXfer(addr, OP_SHUTDOWN, LOW);
         else spiXfer(addr, OP_SHUTDOWN, HIGH);
-    }
-	void setScanLimit(uint8_t addr, uint8_t limit) {
-        spiXfer(addr, OP_INTENSITY, limit);
-    }
-	void setIntensity(uint8_t addr, uint8_t intensity) {
-        spiXfer(addr, OP_INTENSITY, intensity);
-    }
 };
 
 #endif

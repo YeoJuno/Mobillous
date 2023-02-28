@@ -25,14 +25,14 @@ void MotorController::xferDataToShifter() {
 
 	for (uint8_t i = 0; i < 8; ++i) {
 		directDigitalWrite(MOTOR_CLK, LOW);
-		if (latchData & bit(7 - i)) directDigitalWrite(MOTOR_DATA, HIGH);
+		if (_BIT_CHECK_(latchData, 7 - i)) directDigitalWrite(MOTOR_DATA, HIGH);
         else directDigitalWrite(MOTOR_DATA, LOW);
 		directDigitalWrite(MOTOR_CLK, HIGH);
 	}
-	digitalWrite(MOTOR_LATCH, HIGH);
+	directDigitalWrite(MOTOR_LATCH, HIGH);
 }
 
-Motor::Motor(uint8_t channel, uint8_t frequency = MOTOR34_64KHZ) {
+Motor::Motor(uint8_t channel, uint8_t frequency = MOTOR34_8KHZ) {
     this->motorNum = channel;
     this->motorFreq = frequency;
 

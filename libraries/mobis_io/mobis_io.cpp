@@ -10,10 +10,6 @@ void directSetPinIn(uint8_t pin) {
     _BIT_UNSET_(*(unoPin[pin].addrDdr), unoPin[pin].pinNumInPort);
     _BIT_UNSET_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
 }
-void directSetPinInPullup(uint8_t pin) {
-	_BIT_UNSET_(*(unoPin[pin].addrDdr), unoPin[pin].pinNumInPort);
-	_BIT_SET_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
-}
 /* Substitute of 'digitalRead()'. Modify PINx register. */
 uint8_t directDigitalRead(uint8_t pin) {
     return _BIT_CHECK_(*(unoPin[pin].addrPin), unoPin[pin].pinNumInPort);
@@ -25,7 +21,7 @@ void directDigitalWrite(uint8_t pin, uint8_t data) {
 void directDigitalToggle(uint8_t pin) {
     _BIT_TOGGLE_(*(unoPin[pin].addrPort), unoPin[pin].pinNumInPort);
 }
-uint16_t testAnalogRead(uint8_t pin) {
+uint16_t directAnalogRead(uint8_t pin) {
     /*  ADMUX(0x7C) : select MUX[2:0] from pin number
         ADCSRA(0x7A, ADC Control and Status Register A)
             : Set ADSC(Start Conversion) to start ADC
@@ -35,4 +31,4 @@ uint16_t testAnalogRead(uint8_t pin) {
     _BIT_SET_((*(volatile uint8_t *)(0x7A)), 6);
 	while (_BIT_CHECK_((*(volatile uint8_t *)(0x7A)), 6));
     return (*(volatile uint16_t *)(0x78));  // return ADCH(LSB 2-bit) + ADCL(8-bit) = 10-bit ADC value
-}
+} 
